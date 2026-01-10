@@ -1,5 +1,7 @@
 package com.franchise.api.domain.model;
 
+import com.franchise.api.domain.exception.InvalidAttributeException;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,14 +18,14 @@ public class Product {
 
     public void updateStock (Integer newStock) {
        if (newStock < 0) {
-        throw new IllegalArgumentException("Stock cannot be negative");
+        throw new InvalidAttributeException("Stock cannot be negative");
     }
     this.stock = newStock;
     }
 
     public void updateName (String newName) {
         if (newName == null || newName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Name cannot be null or empty");
+            throw new InvalidAttributeException("Name cannot be null or empty");
         }
         this.name = newName;
     }
