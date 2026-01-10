@@ -4,21 +4,20 @@ import com.franchise.api.domain.exception.InvalidAttributeException;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Setter;
 import lombok.Getter;
 
 @Builder(toBuilder = true)
-@Setter @Getter
+@Getter
 @AllArgsConstructor
 public class Franchise {
-    private String id;
-    private String name;
+    private final String id;
+    private final String name;
     
 
-    public void updateName (String newName) {
-        if (newName == null || newName.trim().isEmpty()) {
-            throw new InvalidAttributeException("Name cannot be null or empty");
+    public Franchise validate() {
+        if (name == null || name.trim().isEmpty()) {
+            throw new InvalidAttributeException( "name", "Name cannot be null or empty");
         }
-        this.name = newName;
+        return this;
     }
 }

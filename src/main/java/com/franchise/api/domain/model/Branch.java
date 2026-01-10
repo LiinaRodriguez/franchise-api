@@ -11,14 +11,17 @@ import lombok.Setter;
 @Setter @Getter
 @AllArgsConstructor
 public class Branch {
-    private String id;
-    private String name;
-    private String franchiseId;
+    private final String id;
+    private final String name;
+    private final String franchiseId;
 
-    public void updateName (String newName) {
-        if (newName == null || newName.trim().isEmpty()) {
-            throw new InvalidAttributeException("Name cannot be null or empty");
+    public Branch validate() {
+        if (name == null || name.trim().isEmpty()) {
+            throw new InvalidAttributeException("name", "Branch name cannot be null or empty");
         }
-        this.name = newName;
+        if (franchiseId == null || franchiseId.trim().isEmpty()) {
+            throw new InvalidAttributeException("franchiseId", "Branch must belong to a franchise");
+        }
+        return this;
     }
 }

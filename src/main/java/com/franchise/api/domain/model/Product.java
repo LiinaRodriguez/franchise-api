@@ -5,29 +5,27 @@ import com.franchise.api.domain.exception.InvalidAttributeException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 @Builder(toBuilder = true)
-@Setter @Getter
+@Getter
 @AllArgsConstructor
 public class Product {
-    private String id;
-    private String name;
-    private Integer stock;
-    private String branchId;
+    private final String id;
+    private final String name;
+    private final Integer stock;
+    private final String branchId;
 
-    public void updateStock (Integer newStock) {
-       if (newStock < 0) {
-        throw new InvalidAttributeException("Stock cannot be negative");
-    }
-    this.stock = newStock;
-    }
-
-    public void updateName (String newName) {
-        if (newName == null || newName.trim().isEmpty()) {
-            throw new InvalidAttributeException("Name cannot be null or empty");
+    public Product validate() {
+        if (name == null || name.trim().isEmpty()) {
+            throw new InvalidAttributeException("name", "Product name cannot be null or empty");
         }
-        this.name = newName;
+        if (stock == null || stock < 0) {
+            throw new InvalidAttributeException("stock", "Stock cannot be negative");
+        }
+        if (branchId == null || branchId.trim().isEmpty()) {
+            throw new InvalidAttributeException("branchId", "Product must belong to a branch");
+        }
+        return this;
     }
 
 }
