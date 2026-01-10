@@ -1,17 +1,22 @@
 package com.franchise.api.domain.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-
-import java.util.ArrayList;
-import java.util.List;
-
+@Builder
 @Setter @Getter
 @AllArgsConstructor
 public class Branch {
     private String id;
     private String name;
-    private List<Product> products = new ArrayList<>();
+    private String franchiseId;
+
+    public void updateName (String newName) {
+        if (newName == null || newName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
+        this.name = newName;
+    }
 }
