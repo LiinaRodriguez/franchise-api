@@ -15,6 +15,8 @@ public class FranchiseMapper {
         return FranchiseResponseDTO.builder()
                 .id(franchise.getId())
                 .name(franchise.getName())
+                .createdAt(franchise.getCreatedAt())
+                .updatedAt(franchise.getUpdatedAt())
                 .build();
     }
 }

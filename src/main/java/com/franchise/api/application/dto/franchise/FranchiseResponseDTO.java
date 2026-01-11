@@ -1,5 +1,7 @@
 package com.franchise.api.application.dto.franchise;
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,4 +12,6 @@ import lombok.Getter;
 public class FranchiseResponseDTO {
     private String id;
     private String name;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

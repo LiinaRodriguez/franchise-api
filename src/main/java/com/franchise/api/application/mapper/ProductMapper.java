@@ -20,6 +20,8 @@ public class ProductMapper {
                 .name(product.getName())
                 .stock(product.getStock())
                 .branchId(product.getBranchId())
+                .createdAt(product.getCreatedAt())
+                .updatedAt(product.getUpdatedAt())
                 .build();
     }
 

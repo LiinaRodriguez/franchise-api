@@ -17,6 +17,8 @@ public class BranchMapper {
                 .id(branch.getId())
                 .name(branch.getName())
                 .franchiseId(branch.getFranchiseId())
+                .createdAt(branch.getCreatedAt())
+                .updatedAt(branch.getUpdatedAt())
                 .build();
     }
 }
