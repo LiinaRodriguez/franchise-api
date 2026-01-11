@@ -1,5 +1,7 @@
 package com.franchise.api.domain.model;
 
+import java.time.LocalDateTime;
+
 import com.franchise.api.domain.exception.InvalidAttributeException;
 
 import lombok.AllArgsConstructor;
@@ -14,6 +16,8 @@ public class Product {
     private final String name;
     private final Integer stock;
     private final String branchId;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
 
     public Product validate() {
         if (name == null || name.trim().isEmpty()) {

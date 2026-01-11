@@ -1,5 +1,7 @@
 package com.franchise.api.domain.model;
 
+import java.time.LocalDateTime;
+
 import com.franchise.api.domain.exception.InvalidAttributeException;
 
 import lombok.AllArgsConstructor;
@@ -12,6 +14,8 @@ import lombok.Getter;
 public class Franchise {
     private final String id;
     private final String name;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
     
 
     public Franchise validate() {
