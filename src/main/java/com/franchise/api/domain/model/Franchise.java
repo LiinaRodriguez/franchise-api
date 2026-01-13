@@ -12,7 +12,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class Franchise {
-    private final String id;
+    private final Long id;
     private final String name;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;

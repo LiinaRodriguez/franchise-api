@@ -12,10 +12,10 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class Product {
-    private final String id;
+    private final Long id;
     private final String name;
     private final Integer stock;
-    private final String branchId;
+    private final Long branchId;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
@@ -26,7 +26,7 @@ public class Product {
         if (stock == null || stock < 0) {
             throw new InvalidAttributeException("stock", "Stock cannot be negative");
         }
-        if (branchId == null || branchId.trim().isEmpty()) {
+        if (branchId == null || branchId.longValue()<= 0) {
             throw new InvalidAttributeException("branchId", "Product must belong to a branch");
         }
         return this;
