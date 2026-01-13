@@ -14,7 +14,7 @@ import com.franchise.api.domain.repository.ProductRepository;
 public class UpdateProductStockUseCase {
     private final ProductRepository productRepository;
 
-    public Mono<ProductResponseDTO> execute(String productId, ProductStockUpdateDTO dto) {
+    public Mono<ProductResponseDTO> execute(Long productId, ProductStockUpdateDTO dto) {
         return productRepository.findById(productId)
                 .switchIfEmpty(Mono.error(new ProductNotFoundException("Product not found with id: " + productId)))
                 .map(product -> product.toBuilder().stock(dto.getStock()).build())

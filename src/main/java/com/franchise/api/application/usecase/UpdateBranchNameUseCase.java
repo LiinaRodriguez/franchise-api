@@ -15,7 +15,7 @@ import com.franchise.api.domain.repository.BranchRepository;
 public class UpdateBranchNameUseCase {
     private final BranchRepository branchRepository;
 
-    public Mono<BranchResponseDTO> execute(String branchId, String newName) {
+    public Mono<BranchResponseDTO> execute(Long branchId, String newName) {
         return branchRepository.findById(branchId)
                 .switchIfEmpty(Mono.error(new BranchNotFoundException("Branch not found with id: " + branchId)))
                 .map(branch -> branch.toBuilder().name(newName).build())

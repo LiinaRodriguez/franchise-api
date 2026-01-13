@@ -13,9 +13,9 @@ import lombok.Setter;
 @Setter @Getter
 @AllArgsConstructor
 public class Branch {
-    private final String id;
+    private final Long id;
     private final String name;
-    private final String franchiseId;
+    private final Long franchiseId;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
@@ -23,7 +23,7 @@ public class Branch {
         if (name == null || name.trim().isEmpty()) {
             throw new InvalidAttributeException("name", "Branch name cannot be null or empty");
         }
-        if (franchiseId == null || franchiseId.trim().isEmpty()) {
+        if (franchiseId == null || franchiseId <= 0) {
             throw new InvalidAttributeException("franchiseId", "Branch must belong to a franchise");
         }
         return this;

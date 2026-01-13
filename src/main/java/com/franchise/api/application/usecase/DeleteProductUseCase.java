@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 public class DeleteProductUseCase {
     private final ProductRepository productRepository;
 
-    public Mono<Void> execute(String productId) {
+    public Mono<Void> execute(Long productId) {
         return productRepository.findById(productId)
                 .switchIfEmpty(Mono.error(new ProductNotFoundException("Product not found with id: " + productId)))
                 .flatMap(product -> productRepository.deleteById(product.getId()));

@@ -6,8 +6,8 @@ import reactor.core.publisher.Mono;
 
 public interface BranchRepository {
     Mono<Branch> save(Branch branch);
-    Mono<Branch> findById(String id);
-    Flux<Branch> findAllByFranchiseId(String franchiseId);
-    Mono<Branch> updateName(String id, String newName);
-    Mono<Boolean> existsByIdAndFranchiseId(String branchId, String franchiseId);
+    Mono<Branch> findById(Long id);
+    Flux<Branch> findAllByFranchiseId(Long franchiseId);
+    Mono<Branch> updateName(Long id, String newName);
+    Mono<Boolean> existsByIdAndFranchiseId(Long branchId, Long franchiseId);
 }

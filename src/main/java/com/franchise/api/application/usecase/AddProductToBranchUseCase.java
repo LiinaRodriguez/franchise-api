@@ -19,7 +19,7 @@ public class AddProductToBranchUseCase {
     private final BranchRepository branchRepository;
     private final ProductRepository productRepository;
 
-    public Mono<ProductResponseDTO> execute (ProductRequestDTO requestDTO, String branchId){
+    public Mono<ProductResponseDTO> execute (ProductRequestDTO requestDTO, Long branchId){
         return branchRepository.findById(branchId)
             .switchIfEmpty(Mono.error(new BranchNotFoundException("Branch not found with id: " + branchId)))
             .flatMap(branch -> {
