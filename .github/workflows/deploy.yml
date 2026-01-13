@@ -54,29 +54,13 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --region ${{ env.AWS_REGION }} \
             --comment "Deploying updated DTO and code" \
-            --parameters commands='[
+            --parameters 'commands=[
               "sudo apt-get update && sudo apt-get install -y awscli",
               "aws ecr get-login-password --region ${{ env.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
               "sudo mkdir -p /home/ubuntu/franchise-api",
               "cd /home/ubuntu/franchise-api",
-              "sudo tee docker-compose.yml > /dev/null <<EOT
-          version: \"3.8\"
-          services:
-            app:
-              image: ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}:latest
-              ports:
-                - \"8080:8080\"
-              environment:
-                SPRING_R2DBC_URL: r2dbc:mysql://${{ secrets.RDS_HOST }}:3306/franchise_db
-                SPRING_R2DBC_USERNAME: ${{ secrets.DB_USERNAME }}
-                SPRING_R2DBC_PASSWORD: ${{ secrets.DB_PASSWORD }}
-                SPRING_PROFILES_ACTIVE: prod
-              restart: always
-              logging:
-                driver: \"json-file\"
-                options:
-                  max-size: \"10m\"
-          EOT",
+              "cat > docker-compose.yml << \"EOF\"\nversion: \"3.8\"\nservices:\n  app:\n    image: ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}:latest\n    ports:\n      - \"8080:8080\"\n    environment:\n      SPRING_R2DBC_URL: r2dbc:mysql://${{ secrets.RDS_HOST }}:3306/franchise_db\n      SPRING_R2DBC_USERNAME: ${{ secrets.DB_USERNAME }}\n      SPRING_R2DBC_PASSWORD: ${{ secrets.DB_PASSWORD }}\n      SPRING_PROFILES_ACTIVE: prod\n    restart: always\nEOF",
               "sudo docker-compose pull",
-              "sudo docker-compose up -d --force-recreate"
+              "sudo docker-compose down || true",
+              "sudo docker-compose up -d"
             ]'
