@@ -6,4 +6,4 @@ import org.springframework.stereotype.Repository;
 import com.franchise.api.infra.adapter.persistence.entity.FranchiseEntity;
 
 @Repository
-public interface FranchiseRepository extends ReactiveCrudRepository<FranchiseEntity, Long> {}
+public interface FranchiseR2dbcRepository extends ReactiveCrudRepository<FranchiseEntity, Long> {}

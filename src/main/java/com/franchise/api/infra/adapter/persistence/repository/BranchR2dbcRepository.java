@@ -8,7 +8,7 @@ import com.franchise.api.infra.adapter.persistence.entity.BranchEntity;
 import reactor.core.publisher.Flux;
 
 @Repository
-public interface BranchRepository extends ReactiveCrudRepository<BranchEntity, Long> {
-    
+public interface BranchR2dbcRepository extends ReactiveCrudRepository<BranchEntity, Long> {
+
     Flux<BranchEntity> findByFranchiseId(Long franchiseId);
 }

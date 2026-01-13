@@ -9,7 +9,7 @@ import com.franchise.api.infra.adapter.persistence.entity.ProductEntity;
 import reactor.core.publisher.Flux;
 
 @Repository
-public interface ProductRepository  extends ReactiveCrudRepository<ProductEntity, Long> {
+public interface ProductR2dbcRepository  extends ReactiveCrudRepository<ProductEntity, Long> {
 
     Flux<ProductEntity> findByBranchId(Long branchId);
 
