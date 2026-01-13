@@ -4,6 +4,7 @@ import com.franchise.api.application.dto.product.ProductRequestDTO;
 import com.franchise.api.application.dto.product.ProductResponseDTO;
 import com.franchise.api.application.dto.product.TopProductResponseDTO;
 import com.franchise.api.domain.model.Product;
+import static java.time.LocalDateTime.now;
 
 public class ProductMapper {
     public static Product toDomain(ProductRequestDTO dto, Long branchId) {
@@ -11,6 +12,8 @@ public class ProductMapper {
                 .name(dto.getName())
                 .stock(dto.getStock())
                 .branchId(branchId)
+                .createdAt(now())
+                .updatedAt(now())
                 .build();
     }
 
