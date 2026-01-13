@@ -10,7 +10,7 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class FranchiseResponseDTO {
-    private String id;
+    private Long id;
     private String name;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

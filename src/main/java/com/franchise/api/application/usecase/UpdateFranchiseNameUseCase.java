@@ -14,7 +14,7 @@ import com.franchise.api.domain.repository.FranchiseRepository;
 public class UpdateFranchiseNameUseCase {
     private final FranchiseRepository franchiseRepository;
 
-    public Mono<FranchiseResponseDTO> execute(String franchiseId, String newName) {
+    public Mono<FranchiseResponseDTO> execute(Long franchiseId, String newName) {
         return franchiseRepository.findById(franchiseId)
                 .switchIfEmpty(Mono.error(new FranchiseNotFoundException("Franchise not found with id: " + franchiseId)))
                 .map(product -> product.toBuilder().name(newName).build())

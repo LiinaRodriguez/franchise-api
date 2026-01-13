@@ -5,7 +5,7 @@ import com.franchise.api.application.dto.branch.BranchResponseDTO;
 import com.franchise.api.domain.model.Branch;
 
 public class BranchMapper {
-    public static Branch toDomain(BranchRequestDTO dto, String franchiseId) {
+    public static Branch toDomain(BranchRequestDTO dto, Long franchiseId) {
         return Branch.builder()
                 .name(dto.getName())
                 .franchiseId(franchiseId)
