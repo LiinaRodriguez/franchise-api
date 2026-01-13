@@ -4,6 +4,28 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Terraform ###
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*
+terraform/terraform.tfvars
+terraform/terraform.tfvars.local
+terraform/override.tf
+terraform/override.tf.json
+terraform/*_override.tf
+terraform/*_override.tf.json
+terraform/crash.log
+
+### AWS ###
+.aws/credentials
+.aws/config
+
+### Environment ###
+.env
+.env.local
+.env.*.local
+
 ### STS ###
 .apt_generated
 .classpath
