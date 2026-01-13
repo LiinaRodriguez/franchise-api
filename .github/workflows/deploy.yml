@@ -76,15 +76,12 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           RDS_HOST: ${{ secrets.RDS_HOST }}
         run: |
-          # Generamos el script de comandos asegurando que las variables se expandan correctamente
+          # 1. Preparamos el script de comandos
           cat <<EOF > remote_script.sh
           mkdir -p /home/ubuntu/franchise-api
           cd /home/ubuntu/franchise-api
-          
-          # Login en ECR dentro de la EC2
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
           
-          # Crear el docker-compose.yml en la EC2
           cat <<EOT > docker-compose.yml
           version: '3.8'
           services:
@@ -97,6 +94,7 @@ jobs:
                 SPRING_R2DBC_URL: r2dbc:mysql://$RDS_HOST:3306/franchise_db
                 SPRING_R2DBC_USERNAME: admin
                 SPRING_R2DBC_PASSWORD: $DB_PASSWORD
+                SPRING_PROFILES_ACTIVE: prod
               restart: always
           EOT
           
@@ -104,11 +102,14 @@ jobs:
           docker-compose up -d
           EOF
 
-          # Ejecutar mediante SSM
+          # 2. Convertimos el script a una sola línea
+          SCRIPT_BASE64=$(base64 -w 0 remote_script.sh)
+
+          # 3. Enviamos el comando que decodifica y ejecuta el script en la EC2
           aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=$(cat remote_script.sh)" \
+            --parameters "commands=[\"echo $SCRIPT_BASE64 | base64 -d | bash\"]" \
             --region ${{ env.AWS_REGION }}
           
-          echo "✅ Despliegue finalizado con éxito"
+          echo "Comando de despliegue enviado con éxito"
