@@ -1,5 +1,6 @@
 package com.franchise.api.application.mapper;
 
+import com.franchise.api.application.dto.product.ProductNameUpdateDTO;
 import com.franchise.api.application.dto.product.ProductRequestDTO;
 import com.franchise.api.application.dto.product.ProductResponseDTO;
 import com.franchise.api.application.dto.product.TopProductResponseDTO;
@@ -34,6 +35,12 @@ public class ProductMapper {
                 .productName(product.getName())
                 .branchName(branchName)
                 .stock(product.getStock())
+                .build();
+    }
+
+    public static ProductNameUpdateDTO toNameUpdateDTO(String name) {
+        return ProductNameUpdateDTO.builder()
+                .name(name)
                 .build();
     }
 }

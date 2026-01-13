@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.franchise.api.application.dto.product.ProductNameUpdateDTO;
 import com.franchise.api.application.dto.product.ProductRequestDTO;
 import com.franchise.api.application.dto.product.ProductResponseDTO;
 import com.franchise.api.application.dto.product.ProductStockUpdateDTO;
@@ -54,7 +55,7 @@ public class ProductController {
     @PutMapping("/products/{productId}/name")
     public Mono<ProductResponseDTO> updateProductName(
         @PathVariable Long productId,
-        @RequestBody ProductRequestDTO requestDTO
+        @RequestBody ProductNameUpdateDTO requestDTO
     ) {
         return updateProductNameUseCase.execute(productId, requestDTO.getName());
     }
