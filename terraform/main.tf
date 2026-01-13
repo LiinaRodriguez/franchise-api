@@ -28,7 +28,8 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# Security Group EC2
+# --- SECURITY GROUPS (Sin cambios) ---
+
 resource "aws_security_group" "ec2" {
   name = "${var.app_name}-ec2-sg"
 
@@ -61,7 +62,6 @@ resource "aws_security_group" "ec2" {
   }
 }
 
-# Security Group RDS
 resource "aws_security_group" "rds" {
   name = "${var.app_name}-rds-sg"
 
@@ -80,11 +80,12 @@ resource "aws_security_group" "rds" {
   }
 }
 
-# RDS MySQL
+# --- RDS MySQL ---
+
 resource "aws_db_instance" "mysql" {
   identifier     = "${var.app_name}-db"
   engine         = "mysql"
-  engine_version = "5.7"
+  engine_version = "5.7" # Se mantiene según tu archivo original 
   instance_class = "db.t3.micro"
 
   db_name  = "franchise_db"
@@ -102,7 +103,6 @@ resource "aws_db_instance" "mysql" {
   maintenance_window      = "mon:04:00-mon:05:00"
 }
 
-# IAM Role para EC2
 resource "aws_iam_role" "ec2_role" {
   name = "${var.app_name}-ec2-role"
 
@@ -111,53 +111,20 @@ resource "aws_iam_role" "ec2_role" {
     Statement = [{
       Action = "sts:AssumeRole"
       Effect = "Allow"
-      Principal = {
-        Service = "ec2.amazonaws.com"
-      }
+      Principal = { Service = "ec2.amazonaws.com" }
     }]
   })
 }
 
-# IAM Policy para ECR
-resource "aws_iam_role_policy" "ecr_policy" {
-  name = "${var.app_name}-ecr-policy"
-  role = aws_iam_role.ec2_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "ecr:GetAuthorizationToken",
-        "ecr:BatchGetImage",
-        "ecr:GetDownloadUrlForLayer"
-      ]
-      Resource = "*"
-    }]
-  })
+# Se adjuntan las políticas gestionadas oficiales (Más robustas)
+resource "aws_iam_role_policy_attachment" "ssm_managed" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-# IAM Policy para Systems Manager
-resource "aws_iam_role_policy" "ssm_policy" {
-  name = "${var.app_name}-ssm-policy"
-  role = aws_iam_role.ec2_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "ssmmessages:CreateControlChannel",
-        "ssmmessages:CreateDataChannel",
-        "ssmmessages:OpenControlChannel",
-        "ssmmessages:OpenDataChannel",
-        "ec2messages:GetEndpoint",
-        "ec2messages:AcknowledgeMessage",
-        "ec2messages:SendReply"
-      ]
-      Resource = "*"
-    }]
-  })
+resource "aws_iam_role_policy_attachment" "ecr_read" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
@@ -165,7 +132,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
-# EC2 Instance
+
 resource "aws_instance" "app" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
@@ -182,27 +149,20 @@ resource "aws_instance" "app" {
     #!/bin/bash
     set -e
     
-    # Update system
+    # Instalación de Docker y dependencias (Versión simplificada para Ubuntu)
     apt-get update
-    apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+    apt-get install -y docker.io docker-compose
     
-    # Install Docker
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-    apt-get update
-    apt-get install -y docker-ce docker-ce-cli containerd.io
-    
-    # Install Docker Compose
-    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
     systemctl start docker
     systemctl enable docker
     
-    # Install AWS Systems Manager Agent
-    snap install amazon-ssm-agent --classic
-    snap start amazon-ssm-agent
+    # Agregar usuario ubuntu al grupo docker para evitar sudo en el deploy [cite: 14]
+    usermod -aG docker ubuntu
     
-    # Create app directory
+    # Asegurar que el agente SSM esté activo (Viene preinstalado en Ubuntu)
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
+    
     mkdir -p /home/ubuntu/franchise-api
     chown -R ubuntu:ubuntu /home/ubuntu/franchise-api
   EOF
@@ -235,13 +195,9 @@ resource "aws_ecr_repository" "app" {
   }
 }
 
-# OUTPUTS
-output "ec2_public_ip" {
-  value = aws_eip.app.public_ip
-}
 
-output "rds_endpoint" {
-  value = aws_db_instance.mysql.endpoint
+output "ec2_instance_id" {
+  value = aws_instance.app.id
 }
 
 output "rds_host" {
@@ -250,12 +206,4 @@ output "rds_host" {
 
 output "ecr_repository_url" {
   value = aws_ecr_repository.app.repository_url
-}
-
-output "app_url" {
-  value = "http://${aws_eip.app.public_ip}:8080"
-}
-
-output "ec2_instance_id" {
-  value = aws_instance.app.id
 }

@@ -47,6 +47,22 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+      - name: Wait for SSM Agent to be ready
+        env:
+          EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+        run: |
+          echo "Waiting for SSM Agent to be ready on EC2..."
+          for i in {1..30}; do
+            if aws ssm describe-instance-information --filters "Key=InstanceIds,Values=$EC2_INSTANCE_ID" --region us-east-1 | grep -q "Online"; then
+              echo "✅ SSM Agent is online"
+              exit 0
+            fi
+            echo "Attempt $i/30: SSM Agent not ready yet, waiting..."
+            sleep 20
+          done
+          echo "❌ SSM Agent failed to become ready"
+          exit 1
+
       - name: Deploy to EC2 via Systems Manager
         env:
           EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
@@ -56,44 +72,41 @@ jobs:
           RDS_HOST: ${{ secrets.RDS_HOST }}
           AWS_REGION: us-east-1
         run: |
-          # Wait for ECR image to be available
-          sleep 5
-          
-          # Create deploy script
-          cat > /tmp/deploy.sh << 'DEPLOY_SCRIPT'
-          #!/bin/bash
-          set -e
-          
+          # Create deploy commands
+          COMMANDS=$(cat <<'COMMANDS_END'
           cd /home/ubuntu/franchise-api
-          
-          cat > docker-compose.yml << EOF
-          version: '3.8'
-          services:
-            app:
-              image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
-              ports:
-                - "80:8080"
-                - "8080:8080"
-              environment:
-                SPRING_R2DBC_URL: r2dbc:mysql://${{ env.RDS_HOST }}:3306/franchise_db
-                SPRING_R2DBC_USERNAME: admin
-                SPRING_R2DBC_PASSWORD: ${{ env.DB_PASSWORD }}
-              restart: always
-          EOF
-          
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          cat > docker-compose.yml << 'DOCKER_COMPOSE'
+version: '3.8'
+services:
+  app:
+    image: ECR_REGISTRY/ECR_REPOSITORY:latest
+    ports:
+      - "80:8080"
+      - "8080:8080"
+    environment:
+      SPRING_R2DBC_URL: r2dbc:mysql://RDS_HOST:3306/franchise_db
+      SPRING_R2DBC_USERNAME: admin
+      SPRING_R2DBC_PASSWORD: DB_PASSWORD
+    restart: always
+DOCKER_COMPOSE
+          sed -i "s|ECR_REGISTRY|$ECR_REGISTRY|g" docker-compose.yml
+          sed -i "s|ECR_REPOSITORY|$ECR_REPOSITORY|g" docker-compose.yml
+          sed -i "s|RDS_HOST|$RDS_HOST|g" docker-compose.yml
+          sed -i "s|DB_PASSWORD|$DB_PASSWORD|g" docker-compose.yml
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
           docker-compose pull
           docker-compose down || true
           docker-compose up -d
-          sleep 15
-          curl -f http://localhost:8080/actuator/health || echo "Health check pending"
-          DEPLOY_SCRIPT
+          sleep 10
+          curl -f http://localhost:8080/actuator/health || echo "App starting..."
+          COMMANDS_END
+          )
           
-          # Execute on EC2 via Systems Manager
+          # Send command to EC2 via Systems Manager
           aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters '{"commands":["bash -s < /tmp/deploy.sh"]}' \
+            --parameters "commands=$COMMANDS" \
             --region "$AWS_REGION" \
             --output text
           
