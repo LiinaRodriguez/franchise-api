@@ -9,9 +9,10 @@ import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 
-@Getter
+@Getter @Setter
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @Table("branches")

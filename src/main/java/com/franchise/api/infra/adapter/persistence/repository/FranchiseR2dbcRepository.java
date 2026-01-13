@@ -5,5 +5,9 @@ import org.springframework.stereotype.Repository;
 
 import com.franchise.api.infra.adapter.persistence.entity.FranchiseEntity;
 
+import reactor.core.publisher.Mono;
+
 @Repository
-public interface FranchiseR2dbcRepository extends ReactiveCrudRepository<FranchiseEntity, Long> {}
+public interface FranchiseR2dbcRepository extends ReactiveCrudRepository<FranchiseEntity, Long> {
+    Mono<Boolean> existsByName(String name);
+}

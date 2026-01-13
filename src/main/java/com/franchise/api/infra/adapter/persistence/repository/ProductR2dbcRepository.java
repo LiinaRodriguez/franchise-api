@@ -7,11 +7,14 @@ import org.springframework.data.r2dbc.repository.Query;
 import com.franchise.api.infra.adapter.persistence.entity.ProductEntity;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Repository
 public interface ProductR2dbcRepository  extends ReactiveCrudRepository<ProductEntity, Long> {
 
     Flux<ProductEntity> findByBranchId(Long branchId);
+    Flux<ProductEntity> findAllByBranchId(Long branchId);
+    Mono<ProductEntity> findFirstByBranchIdOrderByStockDesc(Long branchId);
 
     @Query("SELECT p.* FROM products p " +
            "JOIN branches b ON p.branch_id = b.id " +
