@@ -69,47 +69,46 @@ jobs:
           exit 1
 
       - name: Deploy to EC2 via Systems Manager
-        env:
-          EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ env.APP_NAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          RDS_HOST: ${{ secrets.RDS_HOST }}
         run: |
-          # 1. Preparamos el script de comandos
+          # Creamos el script que se ejecutará dentro de la EC2
           cat <<EOF > remote_script.sh
-          mkdir -p /home/ubuntu/franchise-api
-          cd /home/ubuntu/franchise-api
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+          # 1. Login en ECR
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
           
+          # 2. Ir a la carpeta del proyecto
+          cd /home/ubuntu/franchise-api
+          
+          # 3. Crear el docker-compose.yml local con las variables reales
           cat <<EOT > docker-compose.yml
           version: '3.8'
           services:
             app:
-              image: $ECR_REGISTRY/$ECR_REPOSITORY:latest
+              image: ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_NAME }}:latest
               ports:
-                - "80:8080"
                 - "8080:8080"
               environment:
-                SPRING_R2DBC_URL: r2dbc:mysql://$RDS_HOST:3306/franchise_db
-                SPRING_R2DBC_USERNAME: admin
-                SPRING_R2DBC_PASSWORD: $DB_PASSWORD
+                SPRING_R2DBC_URL: r2dbc:mysql://${{ secrets.RDS_HOST }}:3306/franchise_db
+                SPRING_R2DBC_USERNAME: ${{ secrets.DB_USERNAME }}
+                SPRING_R2DBC_PASSWORD: ${{ secrets.DB_PASSWORD }}
                 SPRING_PROFILES_ACTIVE: prod
               restart: always
+              logging:
+                driver: "json-file"
+                options:
+                  max-size: "10m"
           EOT
           
+          # 4. Pull y despliegue
           docker-compose pull
           docker-compose up -d
           EOF
 
-          # 2. Convertimos el script a una sola línea
-          SCRIPT_BASE64=$(base64 -w 0 remote_script.sh)
+          # Convertimos a Base64 para enviarlo de forma segura
+          SCRIPT_B64=$(base64 -w 0 remote_script.sh)
 
-          # 3. Enviamos el comando que decodifica y ejecuta el script en la EC2
+          # Enviamos el comando a la instancia
           aws ssm send-command \
-            --instance-ids "$EC2_INSTANCE_ID" \
+            --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=[\"echo $SCRIPT_BASE64 | base64 -d | bash\"]" \
-            --region ${{ env.AWS_REGION }}
-          
-          echo "Comando de despliegue enviado con éxito"
+            --parameters "commands=[\"echo $SCRIPT_B64 | base64 -d | bash\"]" \
+            --region us-east-1
