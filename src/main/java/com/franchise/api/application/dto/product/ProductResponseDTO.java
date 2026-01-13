@@ -10,10 +10,10 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class ProductResponseDTO {
-    private String id;
+    private Long id;
     private String name;
     private Integer stock;
-    private String branchId;
+    private Long branchId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

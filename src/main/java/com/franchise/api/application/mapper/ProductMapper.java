@@ -6,7 +6,7 @@ import com.franchise.api.application.dto.product.TopProductResponseDTO;
 import com.franchise.api.domain.model.Product;
 
 public class ProductMapper {
-    public static Product toDomain(ProductRequestDTO dto, String branchId) {
+    public static Product toDomain(ProductRequestDTO dto, Long branchId) {
         return Product.builder()
                 .name(dto.getName())
                 .stock(dto.getStock())

@@ -22,7 +22,7 @@ public class GetTopStockProductsByFranchiseUseCase {
     private final ProductRepository productRepository;
     private final FranchiseRepository franchiseRepository;
 
-   public Flux<TopProductResponseDTO> execute(String franchiseId) {
+   public Flux<TopProductResponseDTO> execute(Long franchiseId) {
     return franchiseRepository.findById(franchiseId)
             .switchIfEmpty(Mono.error(new FranchiseNotFoundException("Franchise with ID " + franchiseId + " not found")))
             .flatMapMany(franchise -> branchRepository.findAllByFranchiseId(franchise.getId()))

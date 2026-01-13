@@ -14,7 +14,7 @@ import com.franchise.api.domain.repository.ProductRepository;
 public class UpdateProductNameUseCase {
     private final ProductRepository productRepository;
 
-    public Mono<ProductResponseDTO> execute(String productId, String newName) {
+    public Mono<ProductResponseDTO> execute(Long productId, String newName) {
         return productRepository.findById(productId)
                 .switchIfEmpty(Mono.error(new ProductNotFoundException("Product not found with id: " + productId)))
                 .map(product -> product.toBuilder().name(newName).build())

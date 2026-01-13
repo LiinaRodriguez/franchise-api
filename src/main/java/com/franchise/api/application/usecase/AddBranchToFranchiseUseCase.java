@@ -17,7 +17,7 @@ public class AddBranchToFranchiseUseCase {
     private final FranchiseRepository franchiseRepository;
     private final BranchRepository branchRepository;
 
-    public Mono<BranchResponseDTO> execute(BranchRequestDTO requestDTO, String franchiseId) {
+    public Mono<BranchResponseDTO> execute(BranchRequestDTO requestDTO, Long franchiseId) {
         return franchiseRepository.findById(franchiseId)
             .switchIfEmpty(Mono.error(new FranchiseNotFoundException("Franchise not found with id: " + franchiseId)))
             .flatMap(franchise -> {
