@@ -54,47 +54,48 @@ jobs:
           ECR_REPOSITORY: ${{ env.APP_NAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           RDS_HOST: ${{ secrets.RDS_HOST }}
+          AWS_REGION: us-east-1
         run: |
           # Wait for ECR image to be available
           sleep 5
           
-          # Create commands to execute on EC2
+          # Create deploy script
+          cat > /tmp/deploy.sh << 'DEPLOY_SCRIPT'
+          #!/bin/bash
+          set -e
+          
+          cd /home/ubuntu/franchise-api
+          
+          cat > docker-compose.yml << EOF
+          version: '3.8'
+          services:
+            app:
+              image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+              ports:
+                - "80:8080"
+                - "8080:8080"
+              environment:
+                SPRING_R2DBC_URL: r2dbc:mysql://${{ env.RDS_HOST }}:3306/franchise_db
+                SPRING_R2DBC_USERNAME: admin
+                SPRING_R2DBC_PASSWORD: ${{ env.DB_PASSWORD }}
+              restart: always
+          EOF
+          
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          docker-compose pull
+          docker-compose down || true
+          docker-compose up -d
+          sleep 15
+          curl -f http://localhost:8080/actuator/health || echo "Health check pending"
+          DEPLOY_SCRIPT
+          
+          # Execute on EC2 via Systems Manager
           aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters commands=\[
-          "cd /home/ubuntu/franchise-api",
-          "cat > docker-compose.yml << EOF",
-          "version: '\''3.8'\''",
-          "services:",
-          "  app:",
-          "    image: ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest",
-          "    ports:",
-          "      - \"80:8080\"",
-          "      - \"8080:8080\"",
-          "    environment:",
-          "      SPRING_R2DBC_URL: r2dbc:mysql://${RDS_HOST}:3306/franchise_db",
-          "      SPRING_R2DBC_USERNAME: admin",
-          "      SPRING_R2DBC_PASSWORD: ${DB_PASSWORD}",
-          "    restart: always",
-          "EOF",
-          "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}",
-          "docker-compose pull",
-          "docker-compose down || true",
-          "docker-compose up -d",
-          "sleep 15",
-          "curl -f http://localhost:8080/actuator/health || echo 'Health check pending'"
-            \] \
-            --region us-east-1 \
+            --parameters '{"commands":["bash -s < /tmp/deploy.sh"]}' \
+            --region "$AWS_REGION" \
             --output text
           
           echo "✅ Deploy command sent to EC2"
 
-      - name: Slack notification (optional)
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Deployment: ${{ job.status }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        continue-on-error: true
