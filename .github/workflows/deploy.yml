@@ -50,9 +50,23 @@ jobs:
         env:
           EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
         run: |
-          echo "Verificando SSM Agent en $EC2_INSTANCE_ID..."
-          aws ssm wait instance-online --instance-ids "$EC2_INSTANCE_ID" --region ${{ env.AWS_REGION }}
-          echo "✅ SSM Agent está online"
+          echo "Verificando conexión con la instancia $EC2_INSTANCE_ID..."
+          for i in {1..15}; do
+            STATUS=$(aws ssm describe-instance-information \
+              --filters "Key=InstanceIds,Values=$EC2_INSTANCE_ID" \
+              --query "InstanceInformationList[0].PingStatus" \
+              --output text)
+            
+            if [ "$STATUS" == "Online" ]; then
+              echo "✅ SSM Agent está ONLINE"
+              exit 0
+            fi
+            
+            echo "Intento $i: Estado actual es ($STATUS). Esperando 10s..."
+            sleep 10
+          done
+          echo "❌ Error: La instancia no se puso online a tiempo."
+          exit 1
 
       - name: Deploy to EC2 via Systems Manager
         env:
@@ -62,12 +76,15 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           RDS_HOST: ${{ secrets.RDS_HOST }}
         run: |
-          # Usamos un archivo temporal para evitar errores de comillas en el comando de AWS
-          cat <<EOF > commands.sh
+          # Generamos el script de comandos asegurando que las variables se expandan correctamente
+          cat <<EOF > remote_script.sh
           mkdir -p /home/ubuntu/franchise-api
           cd /home/ubuntu/franchise-api
+          
+          # Login en ECR dentro de la EC2
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
           
+          # Crear el docker-compose.yml en la EC2
           cat <<EOT > docker-compose.yml
           version: '3.8'
           services:
@@ -87,11 +104,11 @@ jobs:
           docker-compose up -d
           EOF
 
-          # Enviar el archivo de comandos a la EC2
+          # Ejecutar mediante SSM
           aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=$(cat commands.sh)" \
+            --parameters "commands=$(cat remote_script.sh)" \
             --region ${{ env.AWS_REGION }}
           
-          echo "✅ Comando de despliegue enviado con éxito"
+          echo "✅ Despliegue finalizado con éxito"
