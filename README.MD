@@ -178,7 +178,7 @@ terraform destroy
 
 ### Solución Actual en AWS
 
-La aplicación está **actualmente desplegada** en AWS. Accede a través de las siguientes URLs:
+La aplicación está **actualmente apagada** . Esta información se conserva solo como referencia:
 
 | Componente | URL |
 |-----------|-----|
